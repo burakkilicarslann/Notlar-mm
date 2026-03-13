@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Notlarım">
+<meta name="theme-color" content="#0f0e0c">
+<link rel="manifest" href="./manifest.json">
+<title>Notlarım</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #181612;
+    --surface2: #201e19;
+    --border: #2c2922;
+    --accent: #d4a853;
+    --accent2: #7a5c1e;
+    --accent-soft: #3a2e12;
+    --text: #ede8dc;
+    --text-muted: #8a8070;
+    --text-dim: #4a4438;
+    --danger: #a03328;
+    --green: #5a7a4a;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    height: -webkit-fill-available;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── App Shell ── */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    height: -webkit-fill-available;
+  }
+
+  /* ── Status bar spacer ── */
+  .status-bar {
+    height: var(--safe-top);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  /* ── Views ── */
+  .view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .view.active { display: flex; }
+
+  /* ════════════════════════
+     LIST VIEW
+  ════════════════════════ */
+  .list-header {
+    background: var(--surface);
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .list-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .app-title {
+    font-family: 'Lora', serif;
+    font-size: 26px;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .app-title em {
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-left: 6px;
+  }
+
+  .btn-add {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #0f0e0c;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(212,168,83,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+
+  .btn-add:active { transform: scale(0.92); box-shadow: 0 2px 10px rgba(212,168,83,0.2); }
+
+  .search-bar {
+    position: relative;
+  }
+
+  .search-bar input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px 10px 38px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .search-bar input::placeholder { color: var(--text-dim); }
+  .search-bar input:focus { border-color: var(--accent2); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 15px;
+    pointer-events: none;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 20px 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    padding: 7px 14px;
+    border-radius: 8px 8px 0 0;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    background: var(--bg);
+    border-color: var(--border);
+  }
+
+  /* Notes list */
+  .notes-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .notes-scroll::-webkit-scrollbar { display: none; }
+
+  .note-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .note-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent2);
+    border-radius: 12px 0 0 12px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .note-card:active { background: var(--surface2); transform: scale(0.99); }
+  .note-card:active::before { opacity: 1; }
+
+  .card-title {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-preview {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  .card-date {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .card-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .tag-pill {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Swipe delete hint */
+  .card-swipe-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  .delete-bg {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    background: var(--danger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 12px 12px 0;
+    color: white;
+    font-size: 18px;
+  }
+
+  .note-card {
+    position: relative;
+    z-index: 1;
+    transform: translateX(0);
+    transition: transform 0.2s ease;
+    margin-bottom: 0;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .empty-icon {
+    font-size: 52px;
+    opacity: 0.15;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .empty-title {
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .empty-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 28px;
+    padding-bottom: calc(8px + var(--safe-bottom));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .note-stats {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .note-stats span { color: var(--accent2); }
+
+  /* ════════════════════════
+     EDITOR VIEW
+  ════════════════════════ */
+  .editor-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px 4px 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .editor-header-center {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .editor-note-title-mini {
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .editor-meta-mini {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .editor-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: color 0.15s;
+  }
+
+  .icon-btn:active { color: var(--accent); }
+
+  .save-flash {
+    font-size: 10px;
+    color: var(--green);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .save-flash.show { opacity: 1; }
+
+  /* Editor body */
+  .editor-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 24px 20px 40px;
+  }
+
+  .editor-scroll::-webkit-scrollbar { display: none; }
+
+  #edit-title {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'Lora', serif;
+    font-size: 26px;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 4px;
+    resize: none;
+    overflow: hidden;
+    -webkit-appearance: none;
+  }
+
+  #edit-title::placeholder { color: var(--text-dim); font-style: italic; }
+
+  .gold-line {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin: 14px 0 16px;
+    border-radius: 1px;
+  }
+
+  /* Tag row */
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .edit-tag-pill {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent2);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: default;
+  }
+
+  .edit-tag-pill .rm-tag {
+    color: var(--accent2);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  #tag-field {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    min-width: 80px;
+  }
+
+  #tag-field::placeholder { color: var(--text-dim); }
+
+  #edit-body {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 2;
+    resize: none;
+    min-height: 300px;
+    -webkit-appearance: none;
+  }
+
+  #edit-body::placeholder { color: var(--text-dim); }
+
+  /* Bottom editor bar */
+  .editor-bottom {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 20px;
+    padding-bottom: calc(10px + var(--safe-bottom));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .word-stat {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .editor-toolbar-btns {
+    display: flex;
+    gap: 4px;
+  }
+
+  .fmt-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .fmt-btn:active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent2); }
+
+  /* ── Delete sheet ── */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+  }
+
+  .sheet-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .sheet {
+    width: 100%;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(20px + var(--safe-bottom));
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .sheet-title {
+    font-family: 'Lora', serif;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  .sheet-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .sheet-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: opacity 0.15s;
+  }
+
+  .sheet-btn:active { opacity: 0.8; }
+  .sheet-btn.danger { background: var(--danger); color: white; }
+  .sheet-btn.cancel { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* Install banner */
+  .install-banner {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent2);
+    border-radius: 10px;
+    margin: 8px 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .install-text {
+    font-size: 11px;
+    color: var(--accent);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .install-btn {
+    background: var(--accent);
+    border: none;
+    color: #0f0e0c;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .install-close {
+    background: none;
+    border: none;
+    color: var(--accent2);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  /* Animations */
+  .note-card { animation: cardIn 0.2s ease backwards; }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="status-bar"></div>
+
+  <!-- ══ LIST VIEW ══ -->
+  <div class="view active" id="view-list">
+    <div class="list-header">
+      <div class="list-title-row">
+        <div class="app-title">Notlarım <em>arşiv</em></div>
+        <button class="btn-add" onclick="newNote()" aria-label="Yeni not">+</button>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">⌕</span>
+        <input type="search" id="search-input" placeholder="Notlarda ara..." oninput="renderList()" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs-bar">
+      <div class="tab active" onclick="filterTag(null, this)">Tümü</div>
+    </div>
+
+    <div id="install-banner-wrap"></div>
+
+    <div class="notes-scroll" id="notes-scroll"></div>
+
+    <div class="bottom-bar">
+      <div class="note-stats">Toplam: <span id="total-count">0</span> not</div>
+      <div style="font-size:10px;color:var(--text-dim);">✦ otomatik kaydediliyor</div>
+    </div>
+  </div>
+
+  <!-- ══ EDITOR VIEW ══ -->
+  <div class="view" id="view-editor">
+    <div class="editor-header">
+      <button class="btn-back" onclick="goBack()">‹</button>
+      <div class="editor-header-center">
+        <div class="editor-note-title-mini" id="editor-title-mini">Yeni Not</div>
+        <div class="editor-meta-mini" id="editor-date-mini">—</div>
+      </div>
+      <div class="editor-header-actions">
+        <span class="save-flash" id="save-flash">✓ kaydedildi</span>
+        <button class="icon-btn" onclick="shareNote()" title="Paylaş">↑</button>
+        <button class="icon-btn" onclick="confirmDelete()" title="Sil">🗑</button>
+      </div>
+    </div>
+
+    <div class="editor-scroll">
+      <textarea id="edit-title" rows="1" placeholder="Başlık..." oninput="autoResize(this); onEdit()"></textarea>
+      <div class="gold-line"></div>
+      <div class="tag-row" id="tag-row">
+        <input type="text" id="tag-field" placeholder="+ etiket" onkeydown="tagKey(event)">
+      </div>
+      <textarea id="edit-body" placeholder="Düşüncelerinizi buraya yazın..." oninput="autoResize(this); onEdit()"></textarea>
+    </div>
+
+    <div class="editor-bottom">
+      <div class="word-stat" id="word-stat">0 kelime</div>
+      <div class="editor-toolbar-btns">
+        <button class="fmt-btn" onclick="insertText('**', '**')">B</button>
+        <button class="fmt-btn" onclick="insertText('_', '_')"><em>I</em></button>
+        <button class="fmt-btn" onclick="insertText('\n- ')">•</button>
+        <button class="fmt-btn" onclick="insertText('\n> ')">❝</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete sheet -->
+<div class="sheet-overlay" id="delete-sheet" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Notu Sil</div>
+    <div class="sheet-sub">Bu not kalıcı olarak silinecek.<br>Bu işlem geri alınamaz.</div>
+    <button class="sheet-btn danger" onclick="deleteCurrentNote()">Evet, Sil</button>
+    <button class="sheet-btn cancel" onclick="document.getElementById('delete-sheet').classList.remove('open')">İptal</button>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let notes = JSON.parse(localStorage.getItem('notlarim_v2') || '[]');
+let currentId = null;
+let saveTimer = null;
+let activeTag = null;
+let deferredInstallPrompt = null;
+
+function save() { localStorage.setItem('notlarim_v2', JSON.stringify(notes)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function fmtDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'az önce';
+  if (diff < 3600) return Math.floor(diff/60) + ' dk önce';
+  if (diff < 86400) return Math.floor(diff/3600) + ' sa önce';
+  return d.toLocaleDateString('tr-TR', {day:'numeric', month:'short'});
+}
+
+// ── List ──
+function renderList() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const scroll = document.getElementById('notes-scroll');
+  document.getElementById('total-count').textContent = notes.length;
+
+  let filtered = notes.filter(n => {
+    const matchQ = !q || n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q);
+    const matchTag = !activeTag || (n.tags || []).includes(activeTag);
+    return matchQ && matchTag;
+  }).sort((a,b) => b.updatedAt - a.updatedAt);
+
+  // Render tabs
+  const allTags = [...new Set(notes.flatMap(n => n.tags||[]))];
+  const tabsBar = document.getElementById('tabs-bar');
+  tabsBar.innerHTML = `<div class="tab ${!activeTag?'active':''}" onclick="filterTag(null,this)">Tümü</div>` +
+    allTags.map(t => `<div class="tab ${activeTag===t?'active':''}" onclick="filterTag('${t}',this)">#${t}</div>`).join('');
+
+  if (!filtered.length) {
+    scroll.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✦</div>
+        <div class="empty-title">${q ? 'Sonuç yok' : 'Henüz not yok'}</div>
+        <div class="empty-sub">${q ? 'Farklı bir şey deneyin.' : 'Sağ üstteki + ile\nyeni bir not ekleyin.'}</div>
+      </div>`;
+    return;
+  }
+
+  scroll.innerHTML = filtered.map((n, i) => `
+    <div class="card-swipe-wrapper">
+      <div class="delete-bg" onclick="quickDelete('${n.id}')">🗑</div>
+      <div class="note-card" style="animation-delay:${i*30}ms" onclick="openNote('${n.id}')" 
+           data-id="${n.id}" ontouchstart="swipeStart(event,this)" ontouchmove="swipeMove(event,this)" ontouchend="swipeEnd(event,this)">
+        <div class="card-title">${n.title || 'Başlıksız'}</div>
+        ${n.body ? `<div class="card-preview">${n.body.replace(/\n/g,' ')}</div>` : ''}
+        <div class="card-footer">
+          <div class="card-date">${fmtDate(n.updatedAt)}</div>
+          <div class="card-tags">${(n.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">#${t}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterTag(tag, el) {
+  activeTag = tag;
+  renderList();
+}
+
+// ── Swipe to delete ──
+let swipeX = 0;
+function swipeStart(e, card) { swipeX = e.touches[0].clientX; }
+function swipeMove(e, card) {
+  const dx = e.touches[0].clientX - swipeX;
+  if (dx < -10) card.style.transform = `translateX(${Math.max(dx, -80)}px)`;
+  if (dx > 5 && card.style.transform) card.style.transform = '';
+}
+function swipeEnd(e, card) {
+  const dx = e.changedTouches[0].clientX - swipeX;
+  if (dx < -60) {
+    card.style.transform = 'translateX(-80px)';
+  } else {
+    card.style.transform = '';
+  }
+}
+
+function quickDelete(id) {
+  if (confirm('Bu notu silmek istiyor musunuz?')) {
+    notes = notes.filter(n => n.id !== id);
+    save();
+    renderList();
+  }
+}
+
+// ── New / Open ──
+function newNote() {
+  const note = { id: genId(), title: '', body: '', tags: [], createdAt: Date.now(), updatedAt: Date.now() };
+  notes.unshift(note);
+  save();
+  openNote(note.id);
+}
+
+function openNote(id) {
+  currentId = id;
+  const note = notes.find(n => n.id === id);
+  document.getElementById('edit-title').value = note.title;
+  document.getElementById('edit-body').value = note.body;
+  autoResize(document.getElementById('edit-title'));
+  autoResize(document.getElementById('edit-body'));
+  updateEditorMeta(note);
+  renderEditTags(note.tags || []);
+  updateWordCount();
+  showView('view-editor');
+}
+
+function updateEditorMeta(note) {
+  document.getElementById('editor-title-mini').textContent = note.title || 'Yeni Not';
+  document.getElementById('editor-date-mini').textContent = fmtDate(note.updatedAt);
+}
+
+// ── Editor ──
+function onEdit() {
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+  note.title = document.getElementById('edit-title').value;
+  note.body = document.getElementById('edit-body').value;
+  note.updatedAt = Date.now();
+  updateEditorMeta(note);
+  updateWordCount();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    save();
+    renderList();
+    flashSaved();
+  }, 700);
+}
+
+function flashSaved() {
+  const el = document.getElementById('save-flash');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function updateWordCount() {
+  const body = document.getElementById('edit-body').value;
+  const count = body.trim() ? body.trim().split(/\s+/).length : 0;
+  document.getElementById('word-stat').textContent = count + ' kelime';
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// ── Tags ──
+function renderEditTags(tags) {
+  const row = document.getElementById('tag-row');
+  const input = document.getElementById('tag-field');
+  row.querySelectorAll('.edit-tag-pill').forEach(e => e.remove());
+  tags.forEach(t => {
+    const chip = document.createElement('div');
+    chip.className = 'edit-tag-pill';
+    chip.innerHTML = `#${t} <span class="rm-tag" onclick="removeTag('${t}')">×</span>`;
+    row.insertBefore(chip, input);
+  });
+}
+
+function tagKey(e) {
+  if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/[, ]/g,'');
+    if (!val) return;
+    const note = notes.find(n => n.id === currentId);
+    note.tags = note.tags || [];
+    if (!note.tags.includes(val)) { note.tags.push(val); save(); }
+    renderEditTags(note.tags);
+    e.target.value = '';
+  }
+}
+
+function removeTag(tag) {
+  const note = notes.find(n => n.id === currentId);
+  note.tags = (note.tags||[]).filter(t => t !== tag);
+  save();
+  renderEditTags(note.tags);
+}
+
+// ── Format ──
+function insertText(before, after = '') {
+  const ta = document.getElementById('edit-body');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e);
+  ta.value = ta.value.slice(0,s) + before + sel + after + ta.value.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + before.length + sel.length + after.length;
+  ta.focus();
+  onEdit();
+}
+
+// ── Navigation ──
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  // force save
+  clearTimeout(saveTimer);
+  save();
+  renderList();
+  showView('view-list');
+}
+
+// ── Delete ──
+function confirmDelete() {
+  document.getElementById('delete-sheet').classList.add('open');
+}
+
+function closeSheet(e) {
+  if (e.target.classList.contains('sheet-overlay')) {
+    document.getElementById('delete-sheet').classList.remove('open');
+  }
+}
+
+function deleteCurrentNote() {
+  notes = notes.filter(n => n.id !== currentId);
+  save();
+  document.getElementById('delete-sheet').classList.remove('open');
+  goBack();
+}
+
+// ── Share ──
+function shareNote() {
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+  const text = `${note.title}\n\n${note.body}`;
+  if (navigator.share) {
+    navigator.share({ title: note.title || 'Notlarım', text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => alert('Not panoya kopyalandı!'));
+  }
+}
+
+// ── PWA Install ──
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const wrap = document.getElementById('install-banner-wrap');
+  wrap.innerHTML = `
+    <div class="install-banner">
+      <div class="install-text">📲 Uygulamayı ana ekrana ekleyin, çevrimdışı çalışır!</div>
+      <button class="install-btn" onclick="installApp()">Yükle</button>
+      <button class="install-close" onclick="this.closest('.install-banner').remove()">✕</button>
+    </div>`;
+});
+
+function installApp() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    document.getElementById('install-banner-wrap').innerHTML = '';
+  });
+}
+
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// ── Init ──
+renderList();
+</script>
+</body>
+</html>

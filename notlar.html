@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notlarım</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #222018;
+    --border: #2e2b24;
+    --accent: #d4a853;
+    --accent2: #8b6914;
+    --text: #e8e2d4;
+    --text-muted: #7a7265;
+    --text-dim: #4a4640;
+    --danger: #c0392b;
+    --green: #6b8e5a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .logo span {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-left: 8px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px 8px 34px;
+    border-radius: 6px;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s, width 0.3s;
+  }
+
+  .search-wrap input:focus {
+    border-color: var(--accent2);
+    width: 240px;
+  }
+
+  .search-wrap input::placeholder { color: var(--text-dim); }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .btn-new {
+    background: var(--accent);
+    color: #0f0e0c;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-new:hover { opacity: 0.85; }
+  .btn-new:active { transform: scale(0.97); }
+
+  /* Layout */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    padding: 16px 18px 12px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .note-count {
+    color: var(--accent2);
+    font-size: 11px;
+  }
+
+  .notes-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .notes-list::-webkit-scrollbar { width: 4px; }
+  .notes-list::-webkit-scrollbar-track { background: transparent; }
+  .notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .note-item {
+    padding: 12px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .note-item:hover {
+    background: var(--surface2);
+    border-color: var(--border);
+  }
+
+  .note-item.active {
+    background: var(--surface2);
+    border-color: var(--accent2);
+  }
+
+  .note-item .note-title-preview {
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .note-item .note-meta {
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .note-item .note-preview {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .note-item .delete-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+
+  .note-item:hover .delete-btn { opacity: 1; }
+  .note-item .delete-btn:hover { color: var(--danger); }
+
+  .tag {
+    display: inline-block;
+    background: var(--accent2);
+    color: var(--accent);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Empty state */
+  .empty-sidebar {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 2;
+  }
+
+  /* Editor */
+  .editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .editor-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .save-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--green);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .save-indicator.show { opacity: 1; }
+
+  .save-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .toolbar-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .toolbar-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .toolbar-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent);
+  }
+
+  .editor-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 48px;
+    overflow-y: auto;
+    gap: 0;
+  }
+
+  .editor-body::-webkit-scrollbar { width: 4px; }
+  .editor-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  #note-title {
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--text);
+    width: 100%;
+    margin-bottom: 16px;
+    line-height: 1.3;
+    resize: none;
+    overflow: hidden;
+  }
+
+  #note-title::placeholder { color: var(--text-dim); font-style: italic; }
+
+  .divider-line {
+    width: 60px;
+    height: 1px;
+    background: var(--accent2);
+    margin-bottom: 24px;
+  }
+
+  #note-body {
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    width: 100%;
+    flex: 1;
+    resize: none;
+    line-height: 2;
+    min-height: 300px;
+  }
+
+  #note-body::placeholder { color: var(--text-dim); }
+
+  /* Welcome screen */
+  .welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-dim);
+  }
+
+  .welcome-icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+
+  .welcome h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .welcome p {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Tags input */
+  .tags-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .tag-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+  }
+
+  .tag-chip .remove-tag {
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1;
+  }
+  .tag-chip .remove-tag:hover { color: var(--danger); }
+
+  #tag-input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    width: 120px;
+  }
+
+  #tag-input::placeholder { color: var(--text-dim); }
+
+  /* Word count */
+  .word-count {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* Animations */
+  .note-item {
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .no-results {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Notlarım <span>/ kişisel arşiv</span></div>
+  <div class="header-actions">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Notlarda ara..." oninput="searchNotes()">
+    </div>
+    <button class="btn-new" onclick="newNote()">+ Yeni Not</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span>Notlar</span>
+      <span class="note-count" id="note-count">0 not</span>
+    </div>
+    <div class="notes-list" id="notes-list"></div>
+  </div>
+
+  <div class="editor" id="editor">
+    <div class="welcome" id="welcome-screen">
+      <div class="welcome-icon">✦</div>
+      <h2>Bir not seçin</h2>
+      <p>Kenar çubuğundan bir nota tıklayın ya da yeni bir not oluşturun.</p>
+    </div>
+
+    <div id="editor-content" style="display:none; flex:1; display:none; flex-direction:column; overflow:hidden;">
+      <div class="editor-toolbar">
+        <div class="editor-meta">
+          <span id="last-modified">—</span>
+          <span class="word-count" id="word-count">0 kelime</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="save-indicator" id="save-indicator">
+            <div class="save-dot"></div>
+            <span>Kaydedildi</span>
+          </div>
+          <div class="toolbar-btns">
+            <button class="toolbar-btn" onclick="duplicateNote()">⧉ Kopyala</button>
+            <button class="toolbar-btn" onclick="exportNote()">↓ Dışa Aktar</button>
+          </div>
+        </div>
+      </div>
+      <div class="editor-body">
+        <textarea id="note-title" rows="1" placeholder="Başlık..." oninput="autoResize(this); onEditorChange()"></textarea>
+        <div class="divider-line"></div>
+        <div class="tags-row" id="tags-row">
+          <input type="text" id="tag-input" placeholder="+ etiket ekle..." onkeydown="handleTagInput(event)">
+        </div>
+        <textarea id="note-body" placeholder="Düşüncelerinizi buraya yazın..." oninput="onEditorChange()"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let notes = JSON.parse(localStorage.getItem('notlarim') || '[]');
+let currentId = null;
+let saveTimer = null;
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('tr-TR', { day:'numeric', month:'short', year:'numeric' }) +
+    ' ' + d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function saveToStorage() {
+  localStorage.setItem('notlarim', JSON.stringify(notes));
+}
+
+function renderNotesList(filter = '') {
+  const list = document.getElementById('notes-list');
+  const filtered = notes.filter(n => {
+    const q = filter.toLowerCase();
+    return n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q);
+  }).sort((a,b) => b.updatedAt - a.updatedAt);
+
+  document.getElementById('note-count').textContent = notes.length + ' not';
+
+  if (filtered.length === 0) {
+    list.innerHTML = filter
+      ? `<div class="no-results">Sonuç bulunamadı.</div>`
+      : `<div class="empty-sidebar">Henüz not yok.<br>Yeni bir not oluşturun.</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(n => `
+    <div class="note-item ${n.id === currentId ? 'active' : ''}" onclick="openNote('${n.id}')">
+      <div class="note-title-preview">${n.title || 'Başlıksız'}</div>
+      <div class="note-preview">${n.body.replace(/\n/g,' ').slice(0,60) || '...'}</div>
+      <div class="note-meta">
+        <span>${formatDate(n.updatedAt)}</span>
+        ${n.tags?.length ? `<span class="tag">#${n.tags[0]}</span>` : ''}
+      </div>
+      <button class="delete-btn" onclick="event.stopPropagation(); deleteNote('${n.id}')" title="Sil">✕</button>
+    </div>
+  `).join('');
+}
+
+function openNote(id) {
+  currentId = id;
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+
+  document.getElementById('welcome-screen').style.display = 'none';
+  const ec = document.getElementById('editor-content');
+  ec.style.display = 'flex';
+
+  document.getElementById('note-title').value = note.title;
+  document.getElementById('note-body').value = note.body;
+  document.getElementById('last-modified').textContent = formatDate(note.updatedAt);
+
+  autoResize(document.getElementById('note-title'));
+  updateWordCount();
+  renderTags(note.tags || []);
+  renderNotesList(document.getElementById('search-input').value);
+}
+
+function renderTags(tags) {
+  const row = document.getElementById('tags-row');
+  const input = document.getElementById('tag-input');
+  // Remove old chips
+  row.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  tags.forEach(tag => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `#${tag} <span class="remove-tag" onclick="removeTag('${tag}')">×</span>`;
+    row.insertBefore(chip, input);
+  });
+}
+
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,/g,'');
+    if (!val) return;
+    const note = notes.find(n => n.id === currentId);
+    if (!note) return;
+    note.tags = note.tags || [];
+    if (!note.tags.includes(val)) {
+      note.tags.push(val);
+      saveToStorage();
+      renderTags(note.tags);
+    }
+    e.target.value = '';
+  }
+}
+
+function removeTag(tag) {
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+  note.tags = (note.tags || []).filter(t => t !== tag);
+  saveToStorage();
+  renderTags(note.tags);
+}
+
+function newNote() {
+  const note = {
+    id: generateId(),
+    title: '',
+    body: '',
+    tags: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  notes.unshift(note);
+  saveToStorage();
+  renderNotesList();
+  openNote(note.id);
+  document.getElementById('note-title').focus();
+}
+
+function deleteNote(id) {
+  if (!confirm('Bu notu silmek istediğinizden emin misiniz?')) return;
+  notes = notes.filter(n => n.id !== id);
+  saveToStorage();
+  if (currentId === id) {
+    currentId = null;
+    document.getElementById('welcome-screen').style.display = 'flex';
+    document.getElementById('editor-content').style.display = 'none';
+  }
+  renderNotesList();
+}
+
+function onEditorChange() {
+  if (!currentId) return;
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+  note.title = document.getElementById('note-title').value;
+  note.body = document.getElementById('note-body').value;
+  note.updatedAt = Date.now();
+  document.getElementById('last-modified').textContent = formatDate(note.updatedAt);
+  updateWordCount();
+
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveToStorage();
+    renderNotesList(document.getElementById('search-input').value);
+    showSaved();
+  }, 600);
+}
+
+function showSaved() {
+  const ind = document.getElementById('save-indicator');
+  ind.classList.add('show');
+  setTimeout(() => ind.classList.remove('show'), 2000);
+}
+
+function updateWordCount() {
+  const body = document.getElementById('note-body').value;
+  const count = body.trim() ? body.trim().split(/\s+/).length : 0;
+  document.getElementById('word-count').textContent = count + ' kelime';
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function searchNotes() {
+  renderNotesList(document.getElementById('search-input').value);
+}
+
+function duplicateNote() {
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+  const copy = { ...note, id: generateId(), title: note.title + ' (kopya)', createdAt: Date.now(), updatedAt: Date.now() };
+  notes.unshift(copy);
+  saveToStorage();
+  renderNotesList();
+  openNote(copy.id);
+}
+
+function exportNote() {
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+  const content = `# ${note.title}\n\n${note.body}`;
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (note.title || 'not') + '.txt';
+  a.click();
+}
+
+// Init
+renderNotesList();
+if (notes.length > 0) openNote(notes.sort((a,b)=>b.updatedAt-a.updatedAt)[0].id);
+</script>
+</body>
+</html>
